@@ -35,6 +35,39 @@
         "role": { "type": "string", "enum": ["admin", "user"], "description": "The user's role" }
       },
       "required": ["email", "displayName", "role"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "A financial invoice (income or expense)",
+      "type": "object",
+      "properties": {
+        "orderNo": { "type": "number", "description": "The order number" },
+        "date": { "type": "string", "format": "date", "description": "The date of the invoice" },
+        "firmName": { "type": "string", "description": "The firm name" },
+        "type": { "type": "string", "enum": ["income", "expense"], "description": "The type of invoice" },
+        "invoiceNo": { "type": "string", "description": "The invoice number" },
+        "vatBase": { "type": "number", "description": "The VAT base amount" },
+        "vatRate": { "type": "number", "description": "The VAT rate" },
+        "vatAmount": { "type": "number", "description": "The VAT amount" },
+        "totalAmount": { "type": "number", "description": "The total amount" },
+        "uid": { "type": "string", "description": "The user ID who owns this invoice" }
+      },
+      "required": ["date", "firmName", "type", "invoiceNo", "vatBase", "vatRate", "vatAmount", "totalAmount", "uid"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "A financial payment or collection",
+      "type": "object",
+      "properties": {
+        "orderNo": { "type": "number", "description": "The order number" },
+        "date": { "type": "string", "format": "date", "description": "The date of the payment" },
+        "firmName": { "type": "string", "description": "The firm name" },
+        "type": { "type": "string", "enum": ["collection", "payment"], "description": "The type of payment" },
+        "paymentMethod": { "type": "string", "description": "The payment method" },
+        "amount": { "type": "number", "description": "The amount" },
+        "uid": { "type": "string", "description": "The user ID who owns this payment" }
+      },
+      "required": ["date", "firmName", "type", "paymentMethod", "amount", "uid"]
     }
   },
   "firestore": {
@@ -49,6 +82,14 @@
     "/users/{userId}": {
       "schema": "User",
       "description": "Collection of user profiles"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "Collection of invoices"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Collection of payments"
     },
     "/test/{testId}": {
       "schema": "object",

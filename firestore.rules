@@ -102,10 +102,47 @@ service cloud.firestore {
              data.role in ['admin', 'user'];
     }
 
+    function isValidInvoice(data) {
+      return hasRequiredFields(['date', 'firmName', 'type', 'invoiceNo', 'vatBase', 'vatRate', 'vatAmount', 'totalAmount', 'uid']) &&
+             data.date is string &&
+             data.firmName is string && data.firmName.size() < 200 &&
+             data.type in ['income', 'expense'] &&
+             data.invoiceNo is string &&
+             data.vatBase is number &&
+             data.vatRate is number &&
+             data.vatAmount is number &&
+             data.totalAmount is number &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidPayment(data) {
+      return hasRequiredFields(['date', 'firmName', 'type', 'paymentMethod', 'amount', 'uid']) &&
+             data.date is string &&
+             data.firmName is string && data.firmName.size() < 200 &&
+             data.type in ['collection', 'payment'] &&
+             data.paymentMethod is string &&
+             data.amount is number &&
+             data.uid == request.auth.uid;
+    }
+
     match /transactions/{transactionId} {
       allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
       allow create: if isAuthenticated() && isValidTransaction(request.resource.data);
       allow update: if isAuthenticated() && isDocOwner() && isValidTransaction(request.resource.data) && uidNotModified();
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidInvoice(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidInvoice(request.resource.data) && uidNotModified();
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && isValidPayment(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidPayment(request.resource.data) && uidNotModified();
       allow delete: if isAuthenticated() && isDocOwner();
     }
 
