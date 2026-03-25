@@ -1,0 +1,5 @@
+{
+  "name": "Finansal Takip Sistemi",
+  "description": "Google Sheets mantığıyla çalışan, fatura ve ödeme takibi yapan kapsamlı finansal yönetim sistemi.",
+  "requestFramePermissions": []
+}

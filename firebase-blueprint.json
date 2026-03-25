@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A financial transaction (income or expense)",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date", "description": "The date of the transaction" },
+        "description": { "type": "string", "description": "A description of the transaction" },
+        "category": { "type": "string", "description": "The category of the transaction" },
+        "amount": { "type": "number", "description": "The amount of the transaction" },
+        "type": { "type": "string", "enum": ["income", "expense"], "description": "The type of transaction" },
+        "uid": { "type": "string", "description": "The user ID who owns this transaction" }
+      },
+      "required": ["date", "description", "category", "amount", "type", "uid"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "A monthly budget for a specific category",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string", "description": "The category for the budget" },
+        "amount": { "type": "number", "description": "The budgeted amount" },
+        "uid": { "type": "string", "description": "The user ID who owns this budget" }
+      },
+      "required": ["category", "amount", "uid"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user profile",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email", "description": "The user's email" },
+        "displayName": { "type": "string", "description": "The user's display name" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "The user's role" }
+      },
+      "required": ["email", "displayName", "role"]
+    }
+  },
+  "firestore": {
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Collection of financial transactions"
+    },
+    "/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "Collection of user budgets"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles"
+    },
+    "/test/{testId}": {
+      "schema": "object",
+      "description": "Connection test collection"
+    }
+  }
+}
