@@ -1244,11 +1244,18 @@ function FinancialApp() {
                           <div className="flex justify-between text-sm">
                             <div className="flex flex-col">
                               <span className="font-medium">{category}</span>
-                              {earned > 0 && <span className="text-xs text-green-500">Gelir: ₺{earned.toLocaleString('tr-TR')}</span>}
+                              {earned > 0 && (
+                                <span className="text-[10px] font-bold text-green-500 uppercase tracking-wider">
+                                  Toplam Gelir: ₺{earned.toLocaleString('tr-TR')}
+                                </span>
+                              )}
                             </div>
-                            <span className="text-gray-500 dark:text-slate-400">
-                              Harcama: ₺{spent.toLocaleString('tr-TR')} / Bütçe: ₺{budget.toLocaleString('tr-TR')}
-                            </span>
+                            <div className="text-right">
+                              <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase block mb-1">Harcama Durumu</span>
+                              <span className="text-sm font-medium text-gray-600 dark:text-slate-300">
+                                ₺{spent.toLocaleString('tr-TR')} <span className="text-gray-400">/</span> ₺{budget.toLocaleString('tr-TR')}
+                              </span>
+                            </div>
                           </div>
                           <div className={cn(
                             "h-2 rounded-full overflow-hidden",
@@ -1415,8 +1422,39 @@ function FinancialApp() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
+                className="space-y-6"
               >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className={cn(
+                    "p-6 rounded-2xl border shadow-sm",
+                    isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200"
+                  )}>
+                    <p className="text-sm text-gray-500 mb-1">Toplam Tahsilat</p>
+                    <p className="text-2xl font-bold text-green-500">
+                      ₺{payments.filter(p => p.type === 'collection').reduce((sum, p) => sum + p.amount, 0).toLocaleString('tr-TR')}
+                    </p>
+                  </div>
+                  <div className={cn(
+                    "p-6 rounded-2xl border shadow-sm",
+                    isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200"
+                  )}>
+                    <p className="text-sm text-gray-500 mb-1">Toplam Ödeme</p>
+                    <p className="text-2xl font-bold text-red-500">
+                      ₺{payments.filter(p => p.type === 'payment').reduce((sum, p) => sum + p.amount, 0).toLocaleString('tr-TR')}
+                    </p>
+                  </div>
+                  <div className={cn(
+                    "p-6 rounded-2xl border shadow-sm",
+                    isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200"
+                  )}>
+                    <p className="text-sm text-gray-500 mb-1">Genel Bakiye</p>
+                    <p className="text-2xl font-bold">
+                      ₺{(payments.filter(p => p.type === 'collection').reduce((sum, p) => sum + p.amount, 0) - 
+                        payments.filter(p => p.type === 'payment').reduce((sum, p) => sum + p.amount, 0)).toLocaleString('tr-TR')}
+                    </p>
+                  </div>
+                </div>
+
                 <div className={cn(
                   "rounded-2xl border shadow-sm overflow-hidden",
                   isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200"
@@ -1434,6 +1472,7 @@ function FinancialApp() {
                           <th className="px-6 py-4">Durum</th>
                           <th className="px-6 py-4">Ödeme Şekli</th>
                           <th className="px-6 py-4">Tutar</th>
+                          <th className="px-6 py-4">Firma Bakiyesi</th>
                           <th className="px-6 py-4 text-right">İşlemler</th>
                         </tr>
                       </thead>
@@ -1459,6 +1498,21 @@ function FinancialApp() {
                             </td>
                             <td className="px-6 py-4">{p.paymentMethod}</td>
                             <td className="px-6 py-4 font-bold">₺{p.amount.toLocaleString('tr-TR')}</td>
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col">
+                                <span className={cn(
+                                  "text-xs font-bold",
+                                  debtStatus[p.firmName]?.balance > 0 ? "text-red-500" : 
+                                  debtStatus[p.firmName]?.balance < 0 ? "text-green-500" : "text-gray-400"
+                                )}>
+                                  ₺{Math.abs(debtStatus[p.firmName]?.balance || 0).toLocaleString('tr-TR')}
+                                </span>
+                                <span className="text-[10px] text-gray-400 uppercase">
+                                  {debtStatus[p.firmName]?.balance > 0 ? 'Borçlu' : 
+                                   debtStatus[p.firmName]?.balance < 0 ? 'Alacaklı' : 'Kapalı'}
+                                </span>
+                              </div>
+                            </td>
                             <td className="px-6 py-4 text-right">
                               <div className="flex items-center justify-end gap-2">
                                 <button 
@@ -1515,14 +1569,14 @@ function FinancialApp() {
                             <span className="font-medium">₺{status.totalPaid.toLocaleString('tr-TR')}</span>
                           </div>
                           <div className="pt-3 border-t border-gray-100 dark:border-slate-800 flex justify-between items-center">
-                            <span className="font-bold">Bakiye</span>
+                            <span className="font-bold">Bakiye (Kalan)</span>
                             <span className={cn(
                               "font-bold text-lg",
                               status.balance > 0 ? "text-red-500" : status.balance < 0 ? "text-green-500" : ""
                             )}>
                               ₺{Math.abs(status.balance).toLocaleString('tr-TR')}
-                              <span className="text-xs ml-1">
-                                {status.balance > 0 ? '(Borçlu)' : status.balance < 0 ? '(Alacaklı)' : ''}
+                              <span className="text-xs ml-1 font-medium">
+                                {status.balance > 0 ? '(Borçlu)' : status.balance < 0 ? '(Alacaklı)' : '(Kapalı)'}
                               </span>
                             </span>
                           </div>
@@ -1530,6 +1584,21 @@ function FinancialApp() {
                       </div>
                     );
                   })}
+
+                  {firms.length === 0 && (
+                    <div className="col-span-full p-20 text-center">
+                      <div className={cn(
+                        "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6",
+                        isDarkMode ? "bg-slate-800" : "bg-gray-50"
+                      )}>
+                        <BarChart3 className="w-10 h-10 text-gray-300 dark:text-slate-600" />
+                      </div>
+                      <h3 className="text-lg font-bold mb-2">Henüz Rapor Verisi Yok</h3>
+                      <p className="text-gray-500 dark:text-slate-400 max-w-sm mx-auto">
+                        Firma bazlı borç/alacak raporlarını görebilmek için önce "Faturalarım" ve "Tahsilat / Ödeme" bölümlerinden kayıt eklemelisiniz.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}

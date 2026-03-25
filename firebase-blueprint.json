@@ -10,6 +10,7 @@
         "category": { "type": "string", "description": "The category of the transaction" },
         "amount": { "type": "number", "description": "The amount of the transaction" },
         "type": { "type": "string", "enum": ["income", "expense"], "description": "The type of transaction" },
+        "firmName": { "type": "string", "description": "The firm name associated with the transaction" },
         "uid": { "type": "string", "description": "The user ID who owns this transaction" }
       },
       "required": ["date", "description", "category", "amount", "type", "uid"]

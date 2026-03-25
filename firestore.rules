@@ -13,23 +13,33 @@ service cloud.firestore {
     //   - category: string (required, enum)
     //   - amount: number (required, positive)
     //   - type: string (required, enum: ['income', 'expense'])
+    //   - firmName: string (optional)
     //   - uid: string (required, immutable, matches auth.uid)
     //
-    // Collection: budgets
+    // Collection: invoices
     // Document ID: auto-generated
     // Fields:
-    //   - category: string (required, enum)
-    //   - amount: number (required, positive)
+    //   - date: string (required, format: date)
+    //   - firmName: string (required)
+    //   - type: string (required, enum: ['income', 'expense'])
+    //   - invoiceNo: string (required)
+    //   - vatBase: number (required)
+    //   - vatRate: number (required)
+    //   - vatAmount: number (required)
+    //   - totalAmount: number (required)
+    //   - orderNo: number (optional)
     //   - uid: string (required, immutable, matches auth.uid)
     //
-    // Collection: users
-    // Document ID: userId (matches auth.uid)
+    // Collection: payments
+    // Document ID: auto-generated
     // Fields:
-    //   - email: string (required, format: email)
-    //   - displayName: string (required)
-    //   - role: string (required, enum: ['admin', 'user'])
-    //
-    // ===============================================================
+    //   - date: string (required, format: date)
+    //   - firmName: string (required)
+    //   - type: string (required, enum: ['collection', 'payment'])
+    //   - paymentMethod: string (required)
+    //   - amount: number (required)
+    //   - orderNo: number (optional)
+    //   - uid: string (required, immutable, matches auth.uid)
 
     // ===============================================================
     // Helper Functions
@@ -76,13 +86,14 @@ service cloud.firestore {
       let categories = ['Maaş', 'Kira', 'Market', 'Ulaşım', 'Eğlence', 'Sağlık', 'Fatura', 'Diğer'];
       let types = ['income', 'expense'];
       return hasRequiredFields(['date', 'description', 'category', 'amount', 'type', 'uid']) &&
-             hasOnlyAllowedFields(['date', 'description', 'category', 'amount', 'type', 'uid']) &&
+             hasOnlyAllowedFields(['date', 'description', 'category', 'amount', 'type', 'uid', 'firmName']) &&
              data.date is string &&
              data.description is string && data.description.size() < 200 &&
              data.category in categories &&
              data.amount is number && data.amount >= 0 &&
              data.type in types &&
-             data.uid == request.auth.uid;
+             data.uid == request.auth.uid &&
+             (!('firmName' in data) || data.firmName is string);
     }
 
     function isValidBudget(data) {
@@ -104,6 +115,7 @@ service cloud.firestore {
 
     function isValidInvoice(data) {
       return hasRequiredFields(['date', 'firmName', 'type', 'invoiceNo', 'vatBase', 'vatRate', 'vatAmount', 'totalAmount', 'uid']) &&
+             hasOnlyAllowedFields(['date', 'firmName', 'type', 'invoiceNo', 'vatBase', 'vatRate', 'vatAmount', 'totalAmount', 'uid', 'orderNo']) &&
              data.date is string &&
              data.firmName is string && data.firmName.size() < 200 &&
              data.type in ['income', 'expense'] &&
@@ -112,35 +124,38 @@ service cloud.firestore {
              data.vatRate is number &&
              data.vatAmount is number &&
              data.totalAmount is number &&
-             data.uid == request.auth.uid;
+             data.uid == request.auth.uid &&
+             (!('orderNo' in data) || data.orderNo is number);
     }
 
     function isValidPayment(data) {
       return hasRequiredFields(['date', 'firmName', 'type', 'paymentMethod', 'amount', 'uid']) &&
+             hasOnlyAllowedFields(['date', 'firmName', 'type', 'paymentMethod', 'amount', 'uid', 'orderNo']) &&
              data.date is string &&
              data.firmName is string && data.firmName.size() < 200 &&
              data.type in ['collection', 'payment'] &&
              data.paymentMethod is string &&
              data.amount is number &&
-             data.uid == request.auth.uid;
+             data.uid == request.auth.uid &&
+             (!('orderNo' in data) || data.orderNo is number);
     }
 
     match /transactions/{transactionId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read, list: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidTransaction(request.resource.data);
       allow update: if isAuthenticated() && isDocOwner() && isValidTransaction(request.resource.data) && uidNotModified();
       allow delete: if isAuthenticated() && isDocOwner();
     }
 
     match /invoices/{invoiceId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read, list: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidInvoice(request.resource.data);
       allow update: if isAuthenticated() && isDocOwner() && isValidInvoice(request.resource.data) && uidNotModified();
       allow delete: if isAuthenticated() && isDocOwner();
     }
 
     match /payments/{paymentId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read, list: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
       allow create: if isAuthenticated() && isValidPayment(request.resource.data);
       allow update: if isAuthenticated() && isDocOwner() && isValidPayment(request.resource.data) && uidNotModified();
       allow delete: if isAuthenticated() && isDocOwner();
